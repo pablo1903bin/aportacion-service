@@ -1,0 +1,117 @@
+server:
+  servlet:
+    context-path: /aportacion-service
+  port: 8086
+
+spring:
+  application:
+    name: aportacion-service
+
+  profiles:
+    default: dev 
+
+  config:
+    #import: ${SPRING_CONFIG_IMPORT} # Importa la configuración externa desde config-server
+    #import: optional:configserver:http://localhost:7777/
+    import: optional:configserver:http://192.168.100.48:7777/
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    username: ${db.username} 
+    hikari:
+      maximum-pool-size: 5 
+      connection-timeout: 20000 
+    url: ${db.url} 
+    password: ${db.password} 
+
+
+  jpa:
+    hibernate:
+      ddl-auto: validate   # o update/create-drop según tu caso
+    properties:
+      hibernate.format_sql: true
+
+
+  cloud:
+    stream:
+      # 🔌 Definición del binder (el "puente" entre Spring y Kafka)
+      binders:
+        kafka:
+          type: kafka  # Indica que el binder será Kafka
+          environment:
+            spring:
+              kafka:
+                bootstrap-servers: 192.168.100.48:9092  # Dirección IP y puerto del broker Kafka
+
+      # 🧭 Definición de los canales lógicos de entrada y salida
+      bindings:
+        consulta-grupos-usuario-out-0:
+          destination: grupos.consulta.usuario  # Topic de Kafka al que se enviarán los mensajes
+          binder: kafka          # Usa el binder llamado "kafka"
+          content-type: application/json  # Tipo de datos a enviar (recomendado para compatibilidad)
+
+        grupoCreado-out-0:
+          destination: grupos.creados
+          binder: kafka
+          content-type: application/json
+
+
+        consultaGrupos-out-0:
+          destination: grupos.consulta.usuario
+          binder: kafka
+          content-type: application/json
+
+        solicitudUnirseGrupo-out-0:
+          destination: grupos.usuarios.solicitudes
+          binder: kafka
+          content-type: application/json
+
+        miembroAceptado-out-0:
+          destination: grupos.usuarios.aceptados
+          binder: kafka
+          content-type: application/json
+
+        grupoEditado-out-0:
+          destination: grupos.editados
+          binder: kafka
+          content-type: application/json
+
+        grupoEliminado-out-0:
+          destination: grupos.eliminados
+          binder: kafka
+          content-type: application/json
+
+        #input:
+         # destination: mi-topic  # Topic desde el que se leerán los mensajes
+          #group: grupoA          # Grupo de consumidores (permite recibir solo una vez por grupo)
+          #binder: kafka
+          #content-type: application/json  # Tipo de datos esperados
+       # Usa también el binder de Kafka
+
+
+logging:
+  level:
+
+    org:
+      hibernate:
+        SQL: DEBUG # Muestra las consultas SQL generadas por Hibernate en la consola
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE # Muestra también los valores que se "bindean" (asignan) a las consultas SQL
+
+    org.springframework.cloud.stream: DEBUG
+    org.apache.kafka: WARN
+
+eureka:
+  instance:
+    instance-id: "${spring.application.name}:${random.value}" # ID único para registrar esta instancia en Eureka (evita duplicados)
+  client:
+    service-url:   
+      defaultZone: http://192.168.100.48:8761/eureka/
+      #defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+      #defaultZone: "${eureka.registry-server}"
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
