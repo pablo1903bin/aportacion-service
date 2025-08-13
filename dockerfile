@@ -22,7 +22,6 @@ WORKDIR /app
 # Copia solo el JAR generado
 COPY target/aportacion-service.jar app.jar
 
-# Expone puertos (puedes eliminar 8080 si usas solo 443)
 EXPOSE 8086
 EXPOSE 8086
 
