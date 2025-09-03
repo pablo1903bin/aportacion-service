@@ -8,12 +8,13 @@ spring:
     name: aportacion-service
 
   profiles:
-    default: dev 
+    default: local 
 
   config:
     #import: ${SPRING_CONFIG_IMPORT} # Importa la configuración externa desde config-server
     #import: optional:configserver:http://localhost:7777/
-    import: optional:configserver:http://192.168.100.48:7777/
+    #import: optional:configserver:http://192.168.100.48:7777/
+    import: optional:configserver:http://localhost:9999
 
   datasource:
     driver-class-name: org.postgresql.Driver
@@ -41,7 +42,7 @@ spring:
           environment:
             spring:
               kafka:
-                bootstrap-servers: 192.168.100.48:9092  # Dirección IP y puerto del broker Kafka
+                bootstrap-servers: 192.168.1.112:9092  # Dirección IP y puerto del broker Kafka
 
       # 🧭 Definición de los canales lógicos de entrada y salida
       bindings:
@@ -108,7 +109,7 @@ eureka:
     instance-id: "${spring.application.name}:${random.value}" # ID único para registrar esta instancia en Eureka (evita duplicados)
   client:
     service-url:   
-      defaultZone: http://192.168.100.48:8761/eureka/
+      defaultZone: http://localhost:8761/eureka/
       #defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       #defaultZone: "${eureka.registry-server}"
 
