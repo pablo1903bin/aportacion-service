@@ -1,31 +1,27 @@
 server:
-  servlet:
-    context-path: /aportacion-service
-  port: 8086
+  port: ${server.port}
   address: 0.0.0.0
+  servlet:
+    context-path: ${server.context-path}
 
 spring:
   application:
     name: aportacion-service
 
   profiles:
-    default: local 
+    active: local
 
   config:
-    #import: ${SPRING_CONFIG_IMPORT} # Importa la configuración externa desde config-server
-    #import: optional:configserver:http://localhost:7777/
-    #import: optional:configserver:http://192.168.100.48:7777/
     import: optional:configserver:http://localhost:9999
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    username: ${db.username} 
+    url: ${db.url}
+    username: ${db.username}
+    password: ${db.password}
     hikari:
-      maximum-pool-size: 5 
-      connection-timeout: 20000 
-    url: ${db.url} 
-    password: ${db.password} 
-
+      maximum-pool-size: ${db.maximum-pool-size}
+      connection-timeout: ${db.connection-timeout}
 
   jpa:
     hibernate:
@@ -33,86 +29,47 @@ spring:
     properties:
       hibernate.format_sql: true
 
-
   cloud:
-    stream:
-      # 🔌 Definición del binder (el "puente" entre Spring y Kafka)
-      binders:
-        kafka:
-          type: kafka  # Indica que el binder será Kafka
-          environment:
-            spring:
-              kafka:
-                bootstrap-servers: 192.168.1.112:9092  # Dirección IP y puerto del broker Kafka
-
-      # 🧭 Definición de los canales lógicos de entrada y salida
-      bindings:
-        consulta-grupos-usuario-out-0:
-          destination: grupos.consulta.usuario  # Topic de Kafka al que se enviarán los mensajes
-          binder: kafka          # Usa el binder llamado "kafka"
-          content-type: application/json  # Tipo de datos a enviar (recomendado para compatibilidad)
-
-        grupoCreado-out-0:
-          destination: grupos.creados
-          binder: kafka
-          content-type: application/json
-
-
-        consultaGrupos-out-0:
-          destination: grupos.consulta.usuario
-          binder: kafka
-          content-type: application/json
-
-        solicitudUnirseGrupo-out-0:
-          destination: grupos.usuarios.solicitudes
-          binder: kafka
-          content-type: application/json
-
-        miembroAceptado-out-0:
-          destination: grupos.usuarios.aceptados
-          binder: kafka
-          content-type: application/json
-
-        grupoEditado-out-0:
-          destination: grupos.editados
-          binder: kafka
-          content-type: application/json
-
-        grupoEliminado-out-0:
-          destination: grupos.eliminados
-          binder: kafka
-          content-type: application/json
-
-        #input:
-         # destination: mi-topic  # Topic desde el que se leerán los mensajes
-          #group: grupoA          # Grupo de consumidores (permite recibir solo una vez por grupo)
-          #binder: kafka
-          #content-type: application/json  # Tipo de datos esperados
-       # Usa también el binder de Kafka
+    inetutils:
+      ignored-interfaces:
+        - lo
+        - docker0
+        - docker.*
+        - vboxnet0
+        - VirtualBox.*
+        - VMware.*
+        - 127.0.0.1
+      preferred-networks: ${inetutils.preferred-networks}
 
 
 logging:
   level:
-
     org:
       hibernate:
-        SQL: DEBUG # Muestra las consultas SQL generadas por Hibernate en la consola
-        type:
-          descriptor:
-            sql:
-              BasicBinder: TRACE # Muestra también los valores que se "bindean" (asignan) a las consultas SQL
-
-    org.springframework.cloud.stream: DEBUG
-    org.apache.kafka: WARN
+        SQL: DEBUG
+        type.descriptor.sql.BasicBinder: TRACE
 
 eureka:
   instance:
-    instance-id: "${spring.application.name}:${random.value}" # ID único para registrar esta instancia en Eureka (evita duplicados)
+    prefer-ip-address: true
+    ip-address: ${eureka.instance-ip}
+    hostname: ${eureka.instance-host}
+    non-secure-port: ${server.port}
+    secure-port-enabled: false
+    instance-id: "${spring.application.name}:${server.port}:${random.value}"
+    metadata-map:
+      contextPath: ${server.context-path}
   client:
-    service-url:   
-      defaultZone: http://localhost:8761/eureka/
-      #defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
-      #defaultZone: "${eureka.registry-server}"
+    service-url:
+      defaultZone: ${eureka.registry-server}
+    register-with-eureka: true
+    fetch-registry: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
 
 springdoc:
   swagger-ui:
