@@ -1,22 +1,23 @@
 server:
-  port: ${server.port}
+  port: 8086
   address: 0.0.0.0
   servlet:
-    context-path: ${server.context-path}
+    context-path: /aportacion-service   # ✅ sin barra final
 
 spring:
   application:
     name: aportacion-service
 
   profiles:
-    active: local
+    active: dev
 
   config:
-    import: optional:configserver:http://localhost:9999
+    # Usa el Config Server (puedes sobreescribir con SPRING_CONFIG_IMPORT si quieres)
+    import: ${SPRING_CONFIG_IMPORT:optional:configserver:http://192.168.100.48:7777/}
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: ${db.url}
+    url: ${db.url}                     # <- viene del Config Server
     username: ${db.username}
     password: ${db.password}
     hikari:
@@ -39,31 +40,30 @@ spring:
         - VirtualBox.*
         - VMware.*
         - 127.0.0.1
-      #preferred-networks: ${inetutils.preferred-networks}
-
+      # preferred-networks: ${inetutils.preferred-networks}
 
 logging:
   level:
-    org:
-      hibernate:
-        SQL: DEBUG
-        type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.cloud.config: INFO
+    org.springframework.boot.context.config: INFO
 
 eureka:
+  client:
+    service-url:
+      defaultZone: ${eureka.registry-server:http://192.168.100.48:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
   instance:
     prefer-ip-address: true
-    ip-address: ${eureka.instance-ip}
-    hostname: ${eureka.instance-host}
+    ip-address: ${eureka.instance-ip}            # <- del Config Server (dev)
+    hostname: ${eureka.instance-host}            # <- del Config Server (dev)
     non-secure-port: ${server.port}
     secure-port-enabled: false
     instance-id: "${spring.application.name}:${server.port}:${random.value}"
     metadata-map:
-      contextPath: ${server.context-path}
-  client:
-    service-url:
-      defaultZone: ${eureka.registry-server}
-    register-with-eureka: true
-    fetch-registry: true
+      contextPath: ${server.servlet.context-path} # ✅ clave correcta en Boot 3
 
 management:
   endpoints:
@@ -74,3 +74,5 @@ management:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+  api-docs:
+    enabled: true
