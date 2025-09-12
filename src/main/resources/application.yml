@@ -39,7 +39,7 @@ spring:
         - VirtualBox.*
         - VMware.*
         - 127.0.0.1
-      preferred-networks: ${inetutils.preferred-networks}
+      #preferred-networks: ${inetutils.preferred-networks}
 
 
 logging:
