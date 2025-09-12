@@ -10,7 +10,7 @@ set -euo pipefail
 trap 'echo "❌ Error en línea $LINENO. Abortando."; exit 1' ERR
 
 # Uso: ./deploy-aportacion.sh [VERSION] [COMPOSE_DIR]
-VERSION="${1:-v1.0.2}"
+VERSION="${1:-v1.0.3}"
 COMPOSE_DIR="${2:-$HOME/Documentos/Compose/aportacion-service}"
 
 REGISTRY="pablitomixweb"

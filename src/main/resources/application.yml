@@ -2,22 +2,21 @@ server:
   port: 8086
   address: 0.0.0.0
   servlet:
-    context-path: /aportacion-service   # ✅ sin barra final
+    context-path: /aportacion-service
+  # 👇 importante para respetar paths del proxy/gateway
+  forward-headers-strategy: framework
 
 spring:
   application:
     name: aportacion-service
-
   profiles:
     active: dev
-
   config:
-    # Usa el Config Server (puedes sobreescribir con SPRING_CONFIG_IMPORT si quieres)
     import: ${SPRING_CONFIG_IMPORT:optional:configserver:http://192.168.100.48:7777/}
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: ${db.url}                     # <- viene del Config Server
+    url: ${db.url}
     username: ${db.username}
     password: ${db.password}
     hikari:
@@ -40,7 +39,6 @@ spring:
         - VirtualBox.*
         - VMware.*
         - 127.0.0.1
-      # preferred-networks: ${inetutils.preferred-networks}
 
 logging:
   level:
@@ -57,13 +55,13 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    ip-address: ${eureka.instance-ip}            # <- del Config Server (dev)
-    hostname: ${eureka.instance-host}            # <- del Config Server (dev)
+    ip-address: ${eureka.instance-ip}
+    hostname: ${eureka.instance-host}
     non-secure-port: ${server.port}
     secure-port-enabled: false
     instance-id: "${spring.application.name}:${server.port}:${random.value}"
     metadata-map:
-      contextPath: ${server.servlet.context-path} # ✅ clave correcta en Boot 3
+      contextPath: ${server.servlet.context-path}
 
 management:
   endpoints:
@@ -71,8 +69,14 @@ management:
       exposure:
         include: health,info
 
+# ===== Swagger vía Gateway =====
 springdoc:
   swagger-ui:
-    path: /swagger-ui.html
-  api-docs:
-    enabled: true
+    # Desactiva la URL por defecto y fuerza a usar las del gateway:
+    disable-swagger-default-url: true
+    config-url: /gateway/aportacion-service/v3/api-docs/swagger-config
+    url: /gateway/aportacion-service/v3/api-docs
+    oauth2-redirect-url: https://supernovaworks.com.mx/gateway/aportacion-service/swagger-ui/oauth2-redirect.html
+
+api-doc:
+  server-base-path: /gateway/aportacion-service
